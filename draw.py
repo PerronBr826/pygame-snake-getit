@@ -5,11 +5,11 @@ import pygame
 def draw_circle(screen, shape):
     pygame.draw.circle(screen, shape['color'], shape['position'], shape['radius'])
     
-def draw_rect(screen, shape):
-    pygame.draw.rect(screen, shape['color'], (shape['position'][0], shape['position'][1], shape['width'], shape['height']))
+def draw_rect(screen, color, position, width, height):
+    pygame.draw.rect(screen, color, (position[0], position[1], width, height))
     
-def draw_line(screen, shape):
-    pygame.draw.line(screen, shape['color'], shape['start_pos'], shape['end_pos'], shape['width'])
+def draw_line(screen, color, start_pos, end_pos, width):
+    pygame.draw.line(screen, color, start_pos, end_pos, width)
 
 def draw_square(screen, shape):
     pygame.draw.rect(screen, shape['color'], (shape['position'][0] - shape['radius'], shape['position'][1] - shape['radius'], shape['radius'] * 2, shape['radius'] * 2))
