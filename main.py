@@ -23,7 +23,7 @@ WINDOW_HEIGHT = 600
 TITLE = "Pygame Template"
 
 # Frame rate (frames per second)
-FPS = 6
+FPS = 20
 
 def init_game():
     pygame.init()
@@ -123,7 +123,10 @@ def main():
         new_segment[1] += movement[1]
 
         snake_pos.insert(0, new_segment)
-        snake_pos.pop(-1)
+        if len(snake_pos) + 3 < score:
+            print("add")
+        else:
+            snake_pos.pop(-1)
 
 
         # Collision
