@@ -24,3 +24,5 @@ def draw_text(screen, font_pose, text="No text given!", font_size=10, font_name=
     text = font.render(text, False, font_color)
     screen.blit(text, font_pose)
     
+def darken_color(color, darkness):
+    return [color[0] * darkness, color[1] * darkness, color[2] * darkness]

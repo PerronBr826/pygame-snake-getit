@@ -23,7 +23,7 @@ WINDOW_HEIGHT = 600
 TITLE = "Pygame Template"
 
 # Frame rate (frames per second)
-FPS = 20
+FPS = 8
 
 def init_game():
     pygame.init()
@@ -42,7 +42,6 @@ def main():
     # Game Variables
     CELL_SIZE = 30
     direction = "Up"
-    update_snake = 0
     high_score = 120
     score = 0
     
@@ -78,14 +77,19 @@ def main():
     pygame.mixer.music.play(-1)
 
     while running:
+        interior_offset = (CELL_SIZE * 0.1)
         screen.fill(BLACK) # Use color from config
 
         # Draw Apple
         draw.draw_rect(screen, RED, apple_position, CELL_SIZE, CELL_SIZE)
+        draw.draw_rect(screen, draw.darken_color(RED, 0.7), [apple_position[0] + interior_offset, apple_position[1] + interior_offset], CELL_SIZE - interior_offset*2.6, CELL_SIZE - interior_offset*2.6)
+        draw.draw_rect(screen, [255,200,200], [apple_position[0] + interior_offset * 1.666, apple_position[1] + interior_offset * 1.666], 5, 5)
 
         # Draw Snake
         for segment in snake_pos:
             draw.draw_rect(screen, GREEN, segment, CELL_SIZE, CELL_SIZE)
+            interior_offset = (CELL_SIZE * 0.1)
+            draw.draw_rect(screen, draw.darken_color(GREEN, 0.7), [segment[0] + interior_offset, segment[1] + interior_offset], CELL_SIZE - interior_offset*2, CELL_SIZE - interior_offset*2)
         
         # Draw Score
         draw.draw_text(screen, (50, 50), f"Score: {score}", 20, font_color=WHITE)
@@ -106,7 +110,6 @@ def main():
                 elif event.key == pygame.K_w or event.key == pygame.K_DOWN and direction != "Up":
                     direction = "Down"
 
-
         movement = [0,0]
         new_segment = snake_pos[0].copy()
 
@@ -123,19 +126,31 @@ def main():
         new_segment[1] += movement[1]
 
         snake_pos.insert(0, new_segment)
-        if len(snake_pos) + 3 < score:
+        print(f"snake_len {len(snake_pos)}, score {score}")
+        if len(snake_pos) - 1 < score + 3:
             print("add")
         else:
             snake_pos.pop(-1)
 
 
-        # Collision
+        # Apple Collision
         if pygame.Rect(snake_pos[0][0], snake_pos[0][1], CELL_SIZE, CELL_SIZE).colliderect(pygame.Rect(apple_position[0], apple_position[1], CELL_SIZE, CELL_SIZE)):
             score += 1
             apple_position = move_apple()
             sound2.play()
 
+        # Snake Collision
+        segment_i = 0
+        for segment in snake_pos:
+                if segment_i > 0:
+                    if snake_pos[0][0] == segment[0] and snake_pos[0][1] == segment[1]:
+                        running = False
+                else:
+                    segment_i += 1
                     
+        # Wall Collision
+        if snake_pos[0][0] >= WINDOW_WIDTH or snake_pos[0][0] < 0 or snake_pos[0][1] >= WINDOW_HEIGHT or snake_pos[0][1] < 0:
+            running = False                  
 
 
         pygame.display.flip()
