@@ -6,6 +6,8 @@ import config # Import the config module
 import random
 import draw # Import the drawing module
 
+# Highscore (fake)
+
 # Color constants (RGB)
 WHITE = (200, 200, 200)
 BLACK = (28, 28, 28)
@@ -23,7 +25,7 @@ WINDOW_HEIGHT = 600
 TITLE = "Pygame Template"
 
 # Frame rate (frames per second)
-FPS = 8
+FPS = 60
 
 def init_game():
     pygame.init()
@@ -33,17 +35,138 @@ def init_game():
     pygame.display.set_caption(TITLE)
     return screen
 
-
 def main():
-    screen = init_game()
+    print("hi")
+    run_menu()
+
+def run_menu():
+    high_score = 10
+
     clock = pygame.time.Clock() # Initialize the clock here
     running = True
+    
+    # Menu Button Dimensions
+    BUTTON_WIDTH = 200
+    BUTTON_HEIGHT = 50
+
+
+    buttons = [{"text" : "Play", "hover" : 0, "color" : (55,255,55), "purpose" : "play"}, 
+               {"text" : "Quit", "hover" : 0, "color" : (255,55,55), "purpose" : "close"},
+               ]
+
+    screen = init_game()
+    
+    try:
+        pygame.mixer.music.load("game_weak.ogg")
+        pygame.mixer.music.set_volume(0.5)
+        pygame.mixer.music.play(-1)
+    except:
+        print("Music did not load. D:")
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                button_i = 0
+                for button in buttons:
+                    button_x = WINDOW_WIDTH // 2
+                    button_y = WINDOW_HEIGHT // 2 + (65 * button_i)
+                    faux_buttonx = BUTTON_WIDTH + button["hover"]
+                    faux_buttony = BUTTON_HEIGHT + button["hover"] / 2
+
+                    button_box = pygame.Rect(button_x - faux_buttonx / 2, button_y - faux_buttony / 2, faux_buttonx, faux_buttony)
+
+                    if button_box.collidepoint(event.pos):
+                        button["hover"] = 0
+                        if button["purpose"] == "close":
+                            running = False
+                        if button["purpose"] == "play":
+                            high_score = run_snake_game(high_score)
+
+                    button_i += 1
+
+            
+        screen.fill((0,0,0)) # DO NOT Use color from config
+
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        button_i = 0
+
+        draw.draw_text(screen, ((WINDOW_WIDTH // 2 - 85), WINDOW_HEIGHT * 0.4), f"High Score: {high_score}", 20, font_color=WHITE, font_name="LiberationMono-Italic.ttf")
+
+        for button in buttons:
+            button_x =  WINDOW_WIDTH // 2
+            button_y = WINDOW_HEIGHT // 2 + (65 * button_i)
+
+            faux_buttonx = BUTTON_WIDTH + button["hover"]
+            faux_buttony = BUTTON_HEIGHT + button["hover"] / 2
+
+            original_color = button["color"]
+
+            button_box = pygame.Rect(button_x - faux_buttonx / 2, button_y - faux_buttony / 2, faux_buttonx, faux_buttony)
+
+
+
+            if button_box.collidepoint(mouse_x, mouse_y):
+                button_color = draw.darken_color(button["color"], 0.6)
+                button["hover"] = pygame.math.clamp((button["hover"] + 1) * 1.2, 0, 30)
+
+            else:
+                button_color = original_color
+                button["hover"] = pygame.math.clamp((button["hover"] + 1) * 0.9, 0, 30)
+
+
+            button_font = pygame.font.SysFont("Comic Sans MS", round(pygame.math.clamp((40 + button["hover"] * 0.3), 40, 76)))
+            button_font2 = pygame.font.SysFont("Comic Sans MS", round(pygame.math.clamp((40 + button["hover"] * 0.6), 40, 76)))
+                
+            button_label = button_font.render(button["text"], True, draw.darken_color(button_color, 0.6))
+            button_label2 = button_font2.render(button["text"], True, draw.darken_color(original_color, 0.7))
+
+            faux_buttonx = BUTTON_WIDTH + button["hover"]
+            faux_buttony = BUTTON_HEIGHT + button["hover"] / 2
+            
+            button_box.size = [faux_buttonx, faux_buttony]
+            button_box.center = [button_x, button_y]
+
+            text_rect = button_label.get_rect()
+            text_rect.center = button_box.center
+
+            text_rect2 = button_label2.get_rect()
+            text_rect2.center = button_box.center
+
+
+            
+
+            pygame.draw.rect(screen, button_color, button_box)
+            screen.blit(button_label, text_rect)
+            screen.blit(button_label2, text_rect2)
+
+            button_i += 1
+
+        pygame.display.flip()
+        # Limit the frame rate to the specified frames per second (FPS)
+        clock.tick(FPS) # Use the clock to control the frame rate
+
+    pygame.time.delay(560)
+    pygame.quit()
+
+    sys.exit()
+    
+
+def run_snake_game(high_score):
+    screen = init_game()
+    clock = pygame.time.Clock() # Initialize the clock here
+    game_running = True
 
     # Game Variables
     CELL_SIZE = 30
     direction = "Up"
-    high_score = 120
     score = 0
+    speed = 20
+    tick = 0
     
     def move_apple():
         return [random.randint(0, (WINDOW_WIDTH // CELL_SIZE) - 2) * CELL_SIZE, random.randint(0, (WINDOW_WIDTH // CELL_SIZE) - 2) * CELL_SIZE]
@@ -64,19 +187,25 @@ def main():
     sound2 = pygame.mixer.Sound("Sounds/windowbreak.ogg")
     gameover = pygame.mixer.Sound("Sounds/gameover.ogg")
     scream = pygame.mixer.Sound("Sounds/screammale.ogg")
+    itemcatch = pygame.mixer.Sound("Sounds/itemcatch.mp3")
 
     # Set Volume for Sounds
-    sound1.set_volume(1)
-    sound2.set_volume(1)
-    gameover.set_volume(1)
+    sound1.set_volume(.25)
+    sound2.set_volume(.25)
+    gameover.set_volume(.25)
     scream.set_volume(1)
 
-    # Load Music
-    pygame.mixer.music.load("game_weak.ogg")
-    pygame.mixer.music.set_volume(0.5)
-    pygame.mixer.music.play(-1)
+    # Try to Load Music
+    try:
+        pygame.mixer.music.unload()
+        pygame.mixer.music.load("game_intense.mp3")
+        pygame.mixer.music.set_volume(0.5)
+        pygame.mixer.music.play(-1)
+    except:
+        print("Music did not load. D:")
 
-    while running:
+    while game_running:
+        tick += 1
         interior_offset = (CELL_SIZE * 0.1)
         screen.fill(BLACK) # Use color from config
 
@@ -93,14 +222,16 @@ def main():
         
         # Draw Score
         draw.draw_text(screen, (50, 50), f"Score: {score}", 20, font_color=WHITE)
+        if score > high_score:
+            high_score = score
 
         # Check Events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                game_running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    running = False
+                    game_running = False
                 if event.key == pygame.K_w or event.key == pygame.K_UP and direction != "Down":
                     direction = "Up"
                 elif event.key == pygame.K_d or event.key == pygame.K_RIGHT and direction != "Left":
@@ -125,12 +256,13 @@ def main():
         new_segment[0] += movement[0]
         new_segment[1] += movement[1]
 
-        snake_pos.insert(0, new_segment)
-        print(f"snake_len {len(snake_pos)}, score {score}")
-        if len(snake_pos) - 1 < score + 3:
-            print("add")
-        else:
-            snake_pos.pop(-1)
+        if tick % 6 == 0:
+            snake_pos.insert(0, new_segment)
+            print(f"snake_len {len(snake_pos)}, score {score}")
+            if len(snake_pos) - 1 < score + 3:
+                print("add")
+            else:
+                snake_pos.pop(-1)
 
 
         # Apple Collision
@@ -144,22 +276,31 @@ def main():
         for segment in snake_pos:
                 if segment_i > 0:
                     if snake_pos[0][0] == segment[0] and snake_pos[0][1] == segment[1]:
-                        running = False
+                        game_running = False
                 else:
                     segment_i += 1
                     
         # Wall Collision
         if snake_pos[0][0] >= WINDOW_WIDTH or snake_pos[0][0] < 0 or snake_pos[0][1] >= WINDOW_HEIGHT or snake_pos[0][1] < 0:
-            running = False                  
+            game_running = False                  
 
 
         pygame.display.flip()
         # Limit the frame rate to the specified frames per second (FPS)
         clock.tick(FPS) # Use the clock to control the frame rate
 
-    pygame.quit()
+        
+    scream.play()
+    pygame.mixer.music.unload()
+    pygame.time.delay(560)
+    scream.stop()
+    pygame.mixer.music.load("game_weak.ogg")
+    pygame.mixer.music.play(-1)
 
-    sys.exit()
+    return high_score
+    
+
+
 
 if __name__ == "__main__":
     main()
