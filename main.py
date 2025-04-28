@@ -97,6 +97,9 @@ def run_menu():
 
         draw.draw_text(screen, ((WINDOW_WIDTH // 2 - 85), WINDOW_HEIGHT * 0.4), f"High Score: {high_score}", 20, font_color=WHITE, font_name="LiberationMono-Italic.ttf")
 
+        # Main Text
+        draw.draw_text(screen, ((WINDOW_WIDTH // 2 - 85), WINDOW_HEIGHT * 0.2), f"SNAKE ]|[", 20, font_color=WHITE, font_name="")
+
         for button in buttons:
             button_x =  WINDOW_WIDTH // 2
             button_y = WINDOW_HEIGHT // 2 + (65 * button_i)

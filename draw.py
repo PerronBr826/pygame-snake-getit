@@ -21,7 +21,7 @@ def draw_text(screen, font_pose, text="No text given!", font_size=10, font_name=
     font.set_italic(italic)
     font.set_bold(bold)
 
-    text = font.render(text, False, font_color)
+    text = font.render(text, True, font_color)
     screen.blit(text, font_pose)
     
 def darken_color(color, darkness):
