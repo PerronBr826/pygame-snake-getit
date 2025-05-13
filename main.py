@@ -98,7 +98,7 @@ def run_menu():
         draw.draw_text(screen, ((WINDOW_WIDTH // 2 - 85), WINDOW_HEIGHT * 0.4), f"High Score: {high_score}", 20, font_color=WHITE, font_name="LiberationMono-Italic.ttf")
 
         # Main Text
-        draw.draw_text(screen, ((WINDOW_WIDTH // 2 - 85), WINDOW_HEIGHT * 0.2), f"SNAKE ]|[", 20, font_color=WHITE, font_name="")
+        draw.draw_text(screen, (15, WINDOW_HEIGHT * 0.15), f"SNAKE IV", 120, font_color=WHITE, bold=True)
 
         for button in buttons:
             button_x =  WINDOW_WIDTH // 2
@@ -168,19 +168,25 @@ def run_snake_game(high_score):
     CELL_SIZE = 30
     direction = "Up"
     score = 0
-    speed = 20
+    particle_speed = 2
     tick = 0
+
+    # Establish Debris
+    debris = []
     
     def move_apple():
         return [random.randint(0, (WINDOW_WIDTH // CELL_SIZE) - 2) * CELL_SIZE, random.randint(0, (WINDOW_WIDTH // CELL_SIZE) - 2) * CELL_SIZE]
+    
+    def gen_particles(position, count, color):
+        for i in range(count):
+            particle = [[position[0] + random.randint(0, CELL_SIZE), position[1] + random.randint(0, CELL_SIZE)], [random.randint(round(-particle_speed/2), round(particle_speed/2)), random.randint(particle_speed * 2, particle_speed * 4)], draw.darken_color(color, random.randint(50,100)/100), ]
+            debris.append(particle)
+
 
 
     snake_pos = [[int(WINDOW_WIDTH // 2), int(WINDOW_HEIGHT // 2)]]
     for segment in range(2):
         snake_pos.append([int(WINDOW_WIDTH / 2), int(WINDOW_HEIGHT / 2) + CELL_SIZE * (segment + 1)])
-
-    # Establish Debris
-    debris = []
 
     # Define Apple Position
     apple_position = move_apple()
@@ -212,6 +218,15 @@ def run_snake_game(high_score):
         interior_offset = (CELL_SIZE * 0.1)
         screen.fill(BLACK) # Use color from config
 
+        for particle in debris:
+            # Move Particle
+            particle[0][0] += particle[1][0]
+            particle[0][1] -= particle[1][1]
+            # Edit Velocity
+            particle[1][1] -= particle_speed/5
+
+            draw.draw_rect(screen, RED, particle[0], CELL_SIZE/6, CELL_SIZE/6)
+
         # Draw Apple
         draw.draw_rect(screen, RED, apple_position, CELL_SIZE, CELL_SIZE)
         draw.draw_rect(screen, draw.darken_color(RED, 0.7), [apple_position[0] + interior_offset, apple_position[1] + interior_offset], CELL_SIZE - interior_offset*2.6, CELL_SIZE - interior_offset*2.6)
@@ -241,7 +256,7 @@ def run_snake_game(high_score):
                     direction = "Right"
                 elif event.key == pygame.K_a or event.key == pygame.K_LEFT and direction != "Right":
                     direction = "Left"
-                elif event.key == pygame.K_w or event.key == pygame.K_DOWN and direction != "Up":
+                elif event.key == pygame.K_s or event.key == pygame.K_DOWN and direction != "Up":
                     direction = "Down"
 
         movement = [0,0]
@@ -271,6 +286,7 @@ def run_snake_game(high_score):
         # Apple Collision
         if pygame.Rect(snake_pos[0][0], snake_pos[0][1], CELL_SIZE, CELL_SIZE).colliderect(pygame.Rect(apple_position[0], apple_position[1], CELL_SIZE, CELL_SIZE)):
             score += 1
+            gen_particles(apple_position, random.randint(10,20), RED)
             apple_position = move_apple()
             sound2.play()
 
