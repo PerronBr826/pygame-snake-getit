@@ -163,6 +163,7 @@ def run_snake_game(high_score):
     screen = init_game()
     clock = pygame.time.Clock() # Initialize the clock here
     game_running = True
+    playing = True
 
     # Game Variables
     CELL_SIZE = 30
@@ -179,6 +180,7 @@ def run_snake_game(high_score):
     
     def gen_particles(position, count, color):
         for i in range(count):
+            print(color)
             particle = [[position[0] + random.randint(0, CELL_SIZE), position[1] + random.randint(0, CELL_SIZE)], [random.randint(round(-particle_speed/2), round(particle_speed/2)), random.randint(particle_speed * 2, particle_speed * 4)], draw.darken_color(color, random.randint(50,100)/100), ]
             debris.append(particle)
 
@@ -225,7 +227,7 @@ def run_snake_game(high_score):
             # Edit Velocity
             particle[1][1] -= particle_speed/5
 
-            draw.draw_rect(screen, RED, particle[0], CELL_SIZE/6, CELL_SIZE/6)
+            draw.draw_rect(screen, particle[2], particle[0], CELL_SIZE/6, CELL_SIZE/6)
 
         # Draw Apple
         draw.draw_rect(screen, RED, apple_position, CELL_SIZE, CELL_SIZE)
@@ -259,32 +261,48 @@ def run_snake_game(high_score):
                 elif event.key == pygame.K_s or event.key == pygame.K_DOWN and direction != "Up":
                     direction = "Down"
 
-        movement = [0,0]
-        new_segment = snake_pos[0].copy()
+        if playing == True:
+            movement = [0,0]
+            new_segment = snake_pos[0].copy()
 
-        if direction == "Up":
-            movement[1] = -CELL_SIZE
-        if direction == "Down":
-            movement[1] = CELL_SIZE
-        if direction == "Left":
-            movement[0] = -CELL_SIZE
-        if direction == "Right":
-            movement[0] = CELL_SIZE
 
-        new_segment[0] += movement[0]
-        new_segment[1] += movement[1]
+            if direction == "Up":
+                movement[1] = -CELL_SIZE
+            if direction == "Down":
+                movement[1] = CELL_SIZE
+            if direction == "Left":
+                movement[0] = -CELL_SIZE
+            if direction == "Right":
+                movement[0] = CELL_SIZE
 
-        if tick % 6 == 0:
-            snake_pos.insert(0, new_segment)
-            print(f"snake_len {len(snake_pos)}, score {score}")
-            if len(snake_pos) - 1 < score + 3:
-                print("add")
-            else:
-                snake_pos.pop(-1)
+            new_segment[0] += movement[0]
+            new_segment[1] += movement[1]
+
+            if tick % 6 == 0:
+                snake_pos.insert(0, new_segment)
+                print(f"snake_len {len(snake_pos)}, score {score}")
+                if len(snake_pos) - 1 < score + 3:
+                    print("add")
+                else:
+                    snake_pos.pop(-1)
+
+        elif playing == False:
+            if tick % 10 == 0 and len(snake_pos) > 0:
+                lastpos = snake_pos.pop()
+                if random.randint(1,2) == 1:
+                    gen_particles(lastpos, random.randint(10,20), GREEN)
+                else:
+                    gen_particles(lastpos, random.randint(10,20), RED)
+                    
+                scream.play()
+                
+            elif tick % 250 == 0 and len(snake_pos) == 0:
+                game_running = False
+            
 
 
         # Apple Collision
-        if pygame.Rect(snake_pos[0][0], snake_pos[0][1], CELL_SIZE, CELL_SIZE).colliderect(pygame.Rect(apple_position[0], apple_position[1], CELL_SIZE, CELL_SIZE)):
+        if playing == True and pygame.Rect(snake_pos[0][0], snake_pos[0][1], CELL_SIZE, CELL_SIZE).colliderect(pygame.Rect(apple_position[0], apple_position[1], CELL_SIZE, CELL_SIZE)):
             score += 1
             gen_particles(apple_position, random.randint(10,20), RED)
             apple_position = move_apple()
@@ -292,26 +310,28 @@ def run_snake_game(high_score):
 
         # Snake Collision
         segment_i = 0
-        for segment in snake_pos:
-                if segment_i > 0:
-                    if snake_pos[0][0] == segment[0] and snake_pos[0][1] == segment[1]:
-                        game_running = False
-                else:
-                    segment_i += 1
+        if playing == True:
+            for segment in snake_pos:
+                    if segment_i > 0:
+                        if snake_pos[0][0] == segment[0] and snake_pos[0][1] == segment[1]:
+                            playing = False  
+                            scream.play() 
+                    else:
+                        segment_i += 1
                     
         # Wall Collision
-        if snake_pos[0][0] >= WINDOW_WIDTH or snake_pos[0][0] < 0 or snake_pos[0][1] >= WINDOW_HEIGHT or snake_pos[0][1] < 0:
-            game_running = False                  
+        if playing == True:
+            if snake_pos[0][0] >= WINDOW_WIDTH or snake_pos[0][0] < 0 or snake_pos[0][1] >= WINDOW_HEIGHT or snake_pos[0][1] < 0:
+                playing = False   
+                scream.play()               
 
 
         pygame.display.flip()
         # Limit the frame rate to the specified frames per second (FPS)
         clock.tick(FPS) # Use the clock to control the frame rate
 
-        
-    scream.play()
+
     pygame.mixer.music.unload()
-    pygame.time.delay(560)
     scream.stop()
     pygame.mixer.music.load("game_weak.ogg")
     pygame.mixer.music.play(-1)
