@@ -100,9 +100,9 @@ def run_menu():
         mouse_x, mouse_y = pygame.mouse.get_pos()
         button_i = 0
 
-        if current_title_dir == 1:
+        #if current_title_dir == 1:
             
-        else:
+        #else:
 
         draw.draw_text(screen, ((WINDOW_WIDTH // 2 - 85), WINDOW_HEIGHT * 0.4), f"High Score: {high_score}", 20, font_color=WHITE, font_name="LiberationMono-Italic.ttf")
 
