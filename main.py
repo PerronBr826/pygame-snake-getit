@@ -22,10 +22,10 @@ WINDOW_WIDTH = 600
 WINDOW_HEIGHT = 600
 
 # Game window title
-TITLE = "Pygame Template"
+TITLE = "SNAKE IV"
 
 # Frame rate (frames per second)
-FPS = 60
+fps = 60
 
 def init_game():
     pygame.init()
@@ -36,11 +36,12 @@ def init_game():
     return screen
 
 def main():
-    print("hi")
     run_menu()
 
 def run_menu():
     high_score = 10
+    current_title_pose = 0
+    tick = 0
 
     clock = pygame.time.Clock() # Initialize the clock here
     running = True
@@ -55,6 +56,8 @@ def run_menu():
                ]
 
     screen = init_game()
+    scream = pygame.mixer.Sound("Sounds/screammale.ogg")
+    scream.set_volume(30)
     
     try:
         pygame.mixer.music.load("game_weak.ogg")
@@ -64,6 +67,8 @@ def run_menu():
         print("Music did not load. D:")
 
     while running:
+        tick += 1
+        fps = 60
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -94,6 +99,10 @@ def run_menu():
 
         mouse_x, mouse_y = pygame.mouse.get_pos()
         button_i = 0
+
+        if current_title_dir == 1:
+            
+        else:
 
         draw.draw_text(screen, ((WINDOW_WIDTH // 2 - 85), WINDOW_HEIGHT * 0.4), f"High Score: {high_score}", 20, font_color=WHITE, font_name="LiberationMono-Italic.ttf")
 
@@ -150,9 +159,10 @@ def run_menu():
             button_i += 1
 
         pygame.display.flip()
-        # Limit the frame rate to the specified frames per second (FPS)
-        clock.tick(FPS) # Use the clock to control the frame rate
+        # Limit the frame rate to the specified frames per second (fps)
+        clock.tick(fps) # Use the clock to control the frame rate
 
+    scream.play()
     pygame.time.delay(560)
     pygame.quit()
 
@@ -171,6 +181,7 @@ def run_snake_game(high_score):
     score = 0
     particle_speed = 2
     tick = 0
+    fps = 60
 
     # Establish Debris
     debris = []
@@ -199,12 +210,16 @@ def run_snake_game(high_score):
     gameover = pygame.mixer.Sound("Sounds/gameover.ogg")
     scream = pygame.mixer.Sound("Sounds/screammale.ogg")
     itemcatch = pygame.mixer.Sound("Sounds/itemcatch.mp3")
+    gore = pygame.mixer.Sound("Sounds/gore1.ogg")
+    consume = pygame.mixer.Sound("Sounds/gore2.ogg")
 
     # Set Volume for Sounds
     sound1.set_volume(.25)
     sound2.set_volume(.25)
+    consume.set_volume(.25)
     gameover.set_volume(.25)
-    scream.set_volume(1)
+    scream.set_volume(.5)
+    gore.set_volume(.25)
 
     # Try to Load Music
     try:
@@ -226,6 +241,12 @@ def run_snake_game(high_score):
             particle[0][1] -= particle[1][1]
             # Edit Velocity
             particle[1][1] -= particle_speed/5
+            
+            if particle[0][0] < 0 and particle[1][0] < 0:
+                particle[1][0] *= -1
+            elif particle[0][0] > WINDOW_WIDTH and particle[1][0] > 0:
+                particle[1][0] *= -1
+
 
             draw.draw_rect(screen, particle[2], particle[0], CELL_SIZE/6, CELL_SIZE/6)
 
@@ -287,14 +308,12 @@ def run_snake_game(high_score):
                     snake_pos.pop(-1)
 
         elif playing == False:
-            if tick % 10 == 0 and len(snake_pos) > 0:
+            if tick % 35 == 0 and len(snake_pos) > 0:
                 lastpos = snake_pos.pop()
-                if random.randint(1,2) == 1:
-                    gen_particles(lastpos, random.randint(10,20), GREEN)
-                else:
-                    gen_particles(lastpos, random.randint(10,20), RED)
+                gen_particles(lastpos, random.randint(10,20), GREEN)
                     
-                scream.play()
+                gore.play()
+                fps = round(fps * 1.06)
                 
             elif tick % 250 == 0 and len(snake_pos) == 0:
                 game_running = False
@@ -306,7 +325,7 @@ def run_snake_game(high_score):
             score += 1
             gen_particles(apple_position, random.randint(10,20), RED)
             apple_position = move_apple()
-            sound2.play()
+            consume.play()
 
         # Snake Collision
         segment_i = 0
@@ -327,8 +346,8 @@ def run_snake_game(high_score):
 
 
         pygame.display.flip()
-        # Limit the frame rate to the specified frames per second (FPS)
-        clock.tick(FPS) # Use the clock to control the frame rate
+        # Limit the frame rate to the specified frames per second (fps)
+        clock.tick(fps) # Use the clock to control the frame rate
 
 
     pygame.mixer.music.unload()
